@@ -6,7 +6,7 @@ import argparse
 
 
 def run(img_path, txt_path, vis):
-    fa = face_alignment.FaceAlignment(face_alignment.LandmarksType._2D, device='cpu', face_detector='sfd', flip_input=False)
+    fa = face_alignment.FaceAlignment(face_alignment.LandmarksType._2D, device='cpu', face_detector='sfd')
     image = io.imread(img_path)
     det = fa.get_landmarks_from_image(image)
 

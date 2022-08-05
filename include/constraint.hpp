@@ -11,7 +11,7 @@ using Eigen::VectorXd;
 
 namespace Constraint {
 
-struct DistortionRegularizationConstraint{
+struct DistortionRegularizationConstraint {
   DistortionRegularizationConstraint(double weight) : weight(weight) {}
 
   template <typename T>
@@ -22,16 +22,16 @@ struct DistortionRegularizationConstraint{
     return true;
   };
 
-
 private:
   const std::vector<double> dist{-0.00348, -7.231, 30.434, -44.4027};
   const double weight = weight;
-
 };
 
 struct RegularizationConstraint {
-  RegularizationConstraint(int num_coefficients, const VectorXd &variance, double weight)
-      : num_coefficients(num_coefficients), variance(variance), weight(weight) {}
+  RegularizationConstraint(int num_coefficients, const VectorXd &variance,
+                           double weight)
+      : num_coefficients(num_coefficients), variance(variance), weight(weight) {
+  }
 
   template <typename T>
   bool operator()(const T *const coefficients, T *residual) const {
@@ -134,30 +134,35 @@ struct LandmarkConstraint {
                                           {T(0.0), T(0.0), T(1.0)}};
 
     const Eigen::Matrix<T, 3, 1> temp = (reverse_z * eye_coord) + camera_pos;
-    const Eigen::Matrix<T, 3, 1> new_temp{temp(0) / temp(2), temp(1) / temp(2), temp(2) / temp(2)};
-    const Eigen::Matrix<T, 3, 1> norm_coord{new_temp(0), new_temp(1), new_temp(2)};
+    const Eigen::Matrix<T, 3, 1> new_temp{temp(0) / temp(2), temp(1) / temp(2),
+                                          temp(2) / temp(2)};
+    const Eigen::Matrix<T, 3, 1> norm_coord{new_temp(0), new_temp(1),
+                                            new_temp(2)};
     Eigen::Matrix<T, 3, 1> img_coord;
 
-    if (model_distortion == true){
+    if (model_distortion == true) {
       const T r2 = sqrt(new_temp(0) * new_temp(0) + new_temp(1) * new_temp(1));
       const T theta = atan(r2);
       const T norm_x = new_temp(0);
       const T norm_y = new_temp(1);
 
-      const T theta_d = (theta) *  (T(1.0) + distortion_coefficients[0] * theta * theta +
-                                            distortion_coefficients[1] * theta * theta * theta * theta +
-                                            distortion_coefficients[2] * theta * theta * theta * theta * theta * theta +
-                                            distortion_coefficients[3] * theta * theta * theta * theta * theta * theta * theta * theta);
-      
+      const T theta_d =
+          (theta) *
+          (T(1.0) + distortion_coefficients[0] * theta * theta +
+           distortion_coefficients[1] * theta * theta * theta * theta +
+           distortion_coefficients[2] * theta * theta * theta * theta * theta *
+               theta +
+           distortion_coefficients[3] * theta * theta * theta * theta * theta *
+               theta * theta * theta);
+
       const T xDistort = ((theta_d) / (r2)) * norm_x;
       const T yDistort = ((theta_d) / (r2)) * norm_y;
 
       img_coord(0) = cam_intrinsics[0] * (xDistort) + cx;
-      img_coord(1) = (cam_intrinsics[1])  * (yDistort) + cy;
+      img_coord(1) = (cam_intrinsics[1]) * (yDistort) + cy;
       img_coord(2) = new_temp(2);
-      
-    }
-    else{
+
+    } else {
       img_coord = p_matrix * norm_coord;
     }
 
@@ -381,8 +386,8 @@ struct PhotoConstraint {
 
     const Eigen::Matrix<T, 3, 1> eye_coord = (_rot_mat * points) + trans_coord;
 
-    //const T focal_x = cam_intrinsics[0];
-    //const T focal_y = cam_intrinsics[1];
+    // const T focal_x = cam_intrinsics[0];
+    // const T focal_y = cam_intrinsics[1];
     const T cx = T(image.cols) / T(2.0);
     const T cy = T(image.rows) / T(2.0);
     const Eigen::Matrix<T, 3, 1> camera_pos{T(0.0), T(0.0), T(10.0)};
@@ -397,30 +402,35 @@ struct PhotoConstraint {
 
     const Eigen::Matrix<T, 3, 1> temp = (reverse_z * eye_coord) + camera_pos;
 
-    const Eigen::Matrix<T, 3, 1> new_temp{temp(0) / temp(2), temp(1) / temp(2), temp(2) / temp(2)};
-    const Eigen::Matrix<T, 3, 1> norm_coord{new_temp(0), new_temp(1), new_temp(2)};
+    const Eigen::Matrix<T, 3, 1> new_temp{temp(0) / temp(2), temp(1) / temp(2),
+                                          temp(2) / temp(2)};
+    const Eigen::Matrix<T, 3, 1> norm_coord{new_temp(0), new_temp(1),
+                                            new_temp(2)};
     Eigen::Matrix<T, 3, 1> img_coord;
 
-    if (model_distortion == true){
+    if (model_distortion == true) {
       const T r2 = sqrt(new_temp(0) * new_temp(0) + new_temp(1) * new_temp(1));
       const T theta = atan(r2);
       const T norm_x = new_temp(0);
       const T norm_y = new_temp(1);
 
-      const T theta_d = (theta) *  (T(1.0) + distortion_coefficients[0] * theta * theta +
-                                            distortion_coefficients[1] * theta * theta * theta * theta +
-                                            distortion_coefficients[2] * theta * theta * theta * theta * theta * theta +
-                                            distortion_coefficients[3] * theta * theta * theta * theta * theta * theta * theta * theta);
-      
+      const T theta_d =
+          (theta) *
+          (T(1.0) + distortion_coefficients[0] * theta * theta +
+           distortion_coefficients[1] * theta * theta * theta * theta +
+           distortion_coefficients[2] * theta * theta * theta * theta * theta *
+               theta +
+           distortion_coefficients[3] * theta * theta * theta * theta * theta *
+               theta * theta * theta);
+
       const T xDistort = ((theta_d) / (r2)) * norm_x;
       const T yDistort = ((theta_d) / (r2)) * norm_y;
 
       img_coord(0) = cam_intrinsics[0] * (xDistort) + cx;
-      img_coord(1) = (cam_intrinsics[1])  * (yDistort) + cy;
+      img_coord(1) = (cam_intrinsics[1]) * (yDistort) + cy;
       img_coord(2) = new_temp(2);
-      
-    }
-    else{
+
+    } else {
       img_coord = p_matrix * norm_coord;
     }
 
@@ -437,9 +447,12 @@ struct PhotoConstraint {
 
       T observed_colour[3];
       interpolator.Evaluate(y, x, &observed_colour[0]);
-      residual[0] = T(weight) * (face_color[0] - (T(observed_colour[2]) / T(255.0)));
-      residual[1] = T(weight) * (face_color[1] - (T(observed_colour[1]) / T(255.0)));
-      residual[2] = T(weight) * (face_color[2] - (T(observed_colour[0]) / T(255.0)));
+      residual[0] =
+          T(weight) * (face_color[0] - (T(observed_colour[2]) / T(255.0)));
+      residual[1] =
+          T(weight) * (face_color[1] - (T(observed_colour[1]) / T(255.0)));
+      residual[2] =
+          T(weight) * (face_color[2] - (T(observed_colour[0]) / T(255.0)));
     }
 
     return true;

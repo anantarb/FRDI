@@ -1,8 +1,6 @@
 #include <string>
 
-class Landmarks
-{
+class Landmarks {
 public:
-	static void detect(const std::string ImagePath, const std::string TxtPath);
+  static void detect(const std::string ImagePath, const std::string TxtPath);
 };
-

@@ -400,7 +400,8 @@ void BFMModel::fit_image(std::string LandmarkPath, std::string ImagePath) {
   std::vector<double> exp_coefficients;
   std::vector<double> cam_intrinsics;
   std::vector<double> light_coefficients;
-  //std::vector<double> distortion_coefficients{-0.00348, -7.231, 30.434, -44.4027};
+  // std::vector<double> distortion_coefficients{-0.00348, -7.231, 30.434,
+  // -44.4027};
   std::vector<double> distortion_coefficients;
   const int num_coef = 20;
   const int num_tex_coef = 20;
@@ -415,7 +416,7 @@ void BFMModel::fit_image(std::string LandmarkPath, std::string ImagePath) {
   light_coefficients.resize(27);
   distortion_coefficients.resize(4);
 
-  //first optmization step
+  // first optmization step
   ceres::Problem problem;
 
   // ceres residual block
@@ -433,15 +434,14 @@ void BFMModel::fit_image(std::string LandmarkPath, std::string ImagePath) {
                              &exp_coefficients[0], &distortion_coefficients[0]);
   }
 
-  ceres::CostFunction *dist_prior =
-      new ceres::AutoDiffCostFunction<Constraint::DistortionRegularizationConstraint,
-                                      4, 4>(new Constraint::DistortionRegularizationConstraint(1.0));
-
+  ceres::CostFunction *dist_prior = new ceres::AutoDiffCostFunction<
+      Constraint::DistortionRegularizationConstraint, 4, 4>(
+      new Constraint::DistortionRegularizationConstraint(1.0));
 
   problem.AddResidualBlock(dist_prior, nullptr, &distortion_coefficients[0]);
   problem.SetParameterBlockConstant(&exp_coefficients[0]);
   problem.SetParameterBlockConstant(&shape_coefficients[0]);
-  //problem.SetParameterBlockConstant(&distortion_coefficients[0]);
+  // problem.SetParameterBlockConstant(&distortion_coefficients[0]);
 
   ceres::Solver::Options options;
   options.trust_region_strategy_type = ceres::LEVENBERG_MARQUARDT;
@@ -483,26 +483,25 @@ void BFMModel::fit_image(std::string LandmarkPath, std::string ImagePath) {
   }
 
   // set other constraints
-  ceres::CostFunction *shape_prior =
-      new ceres::AutoDiffCostFunction<Constraint::RegularizationConstraint,
-                                      num_coef, num_coef>(
-          new Constraint::RegularizationConstraint(num_coef, shape_variance, 1));
+  ceres::CostFunction *shape_prior = new ceres::AutoDiffCostFunction<
+      Constraint::RegularizationConstraint, num_coef, num_coef>(
+      new Constraint::RegularizationConstraint(num_coef, shape_variance, 1));
 
-  ceres::CostFunction *tex_prior =
-      new ceres::AutoDiffCostFunction<Constraint::RegularizationConstraint,
-                                      num_tex_coef, num_tex_coef>(
-          new Constraint::RegularizationConstraint(num_tex_coef, tex_variance, 1));
+  ceres::CostFunction *tex_prior = new ceres::AutoDiffCostFunction<
+      Constraint::RegularizationConstraint, num_tex_coef, num_tex_coef>(
+      new Constraint::RegularizationConstraint(num_tex_coef, tex_variance, 1));
 
   ceres::CostFunction *exp_prior =
       new ceres::AutoDiffCostFunction<Constraint::RegularizationConstraint,
                                       num_coef, num_coef>(
           new Constraint::RegularizationConstraint(num_coef, exp_variance, 1));
 
-  ceres::CostFunction *dist_prior_one =
-      new ceres::AutoDiffCostFunction<Constraint::DistortionRegularizationConstraint,
-                                      4, 4>(new Constraint::DistortionRegularizationConstraint(1.0));
+  ceres::CostFunction *dist_prior_one = new ceres::AutoDiffCostFunction<
+      Constraint::DistortionRegularizationConstraint, 4, 4>(
+      new Constraint::DistortionRegularizationConstraint(1.0));
 
-  new_problem.AddResidualBlock(dist_prior_one, nullptr, &distortion_coefficients[0]);
+  new_problem.AddResidualBlock(dist_prior_one, nullptr,
+                               &distortion_coefficients[0]);
 
   new_problem.AddResidualBlock(tex_prior, nullptr, &tex_coefficients[0]);
   new_problem.AddResidualBlock(shape_prior, nullptr, &shape_coefficients[0]);
@@ -515,7 +514,6 @@ void BFMModel::fit_image(std::string LandmarkPath, std::string ImagePath) {
   set_texture_coef(tex_coefficients);
   write_model("face.off");
 
-
   // third optmization step
   ceres::Problem new_problem_two;
   const int new_num_coeff = 50;
@@ -526,11 +524,12 @@ void BFMModel::fit_image(std::string LandmarkPath, std::string ImagePath) {
     unsigned int index = distrib(gen);
     ceres::CostFunction *cost_function_two =
         new ceres::AutoDiffCostFunction<Constraint::PhotoConstraint, 3, 6, 2,
-                                        new_num_coeff, new_num_coeff, new_num_tex_coeff, 27,
-                                        4>(new Constraint::PhotoConstraint(
-            shape_mean, shape_pc, tex_mean, tex_pc, exp_mean, exp_pc,
-            shape_variance, tex_variance, exp_variance, image, index, new_num_coeff,
-            grid, interpolator, vertices_faces_map, faces));
+                                        new_num_coeff, new_num_coeff,
+                                        new_num_tex_coeff, 27, 4>(
+            new Constraint::PhotoConstraint(
+                shape_mean, shape_pc, tex_mean, tex_pc, exp_mean, exp_pc,
+                shape_variance, tex_variance, exp_variance, image, index,
+                new_num_coeff, grid, interpolator, vertices_faces_map, faces));
     new_problem_two.AddResidualBlock(
         cost_function_two, nullptr, &cam_extrinsics[0], &cam_intrinsics[0],
         &shape_coefficients[0], &exp_coefficients[0], &tex_coefficients[0],
@@ -541,27 +540,34 @@ void BFMModel::fit_image(std::string LandmarkPath, std::string ImagePath) {
   ceres::CostFunction *shape_prior_two =
       new ceres::AutoDiffCostFunction<Constraint::RegularizationConstraint,
                                       new_num_coeff, new_num_coeff>(
-          new Constraint::RegularizationConstraint(new_num_coeff, shape_variance, 1.0));
+          new Constraint::RegularizationConstraint(new_num_coeff,
+                                                   shape_variance, 1.0));
 
   ceres::CostFunction *tex_prior_two =
       new ceres::AutoDiffCostFunction<Constraint::RegularizationConstraint,
                                       new_num_tex_coeff, new_num_tex_coeff>(
-          new Constraint::RegularizationConstraint(new_num_tex_coeff, tex_variance, 1.0));
+          new Constraint::RegularizationConstraint(new_num_tex_coeff,
+                                                   tex_variance, 1.0));
 
   ceres::CostFunction *exp_prior_two =
       new ceres::AutoDiffCostFunction<Constraint::RegularizationConstraint,
                                       new_num_coeff, new_num_coeff>(
-          new Constraint::RegularizationConstraint(new_num_coeff, exp_variance, 1.0));
+          new Constraint::RegularizationConstraint(new_num_coeff, exp_variance,
+                                                   1.0));
 
-  ceres::CostFunction *dist_prior_two =
-      new ceres::AutoDiffCostFunction<Constraint::DistortionRegularizationConstraint,
-                                      4, 4>(new Constraint::DistortionRegularizationConstraint(1.0));
-  
-  new_problem_two.AddResidualBlock(dist_prior_two, nullptr, &distortion_coefficients[0]);
+  ceres::CostFunction *dist_prior_two = new ceres::AutoDiffCostFunction<
+      Constraint::DistortionRegularizationConstraint, 4, 4>(
+      new Constraint::DistortionRegularizationConstraint(1.0));
 
-  new_problem_two.AddResidualBlock(tex_prior_two, nullptr, &tex_coefficients[0]);
-  new_problem_two.AddResidualBlock(shape_prior_two, nullptr, &shape_coefficients[0]);
-  new_problem_two.AddResidualBlock(exp_prior_two, nullptr, &exp_coefficients[0]);
+  new_problem_two.AddResidualBlock(dist_prior_two, nullptr,
+                                   &distortion_coefficients[0]);
+
+  new_problem_two.AddResidualBlock(tex_prior_two, nullptr,
+                                   &tex_coefficients[0]);
+  new_problem_two.AddResidualBlock(shape_prior_two, nullptr,
+                                   &shape_coefficients[0]);
+  new_problem_two.AddResidualBlock(exp_prior_two, nullptr,
+                                   &exp_coefficients[0]);
 
   new_problem_two.SetParameterBlockConstant(&exp_coefficients[0]);
   ceres::Solve(options, &new_problem_two, &summary);
@@ -580,11 +586,12 @@ void BFMModel::fit_image(std::string LandmarkPath, std::string ImagePath) {
   for (unsigned int i = 0; i < num_vertices; ++i) {
     ceres::CostFunction *cost_function_full =
         new ceres::AutoDiffCostFunction<Constraint::PhotoConstraint, 3, 6, 2,
-                                        full_num_coeff, full_num_coeff, full_num_tex_coeff, 27,
-                                        4>(new Constraint::PhotoConstraint(
-            shape_mean, shape_pc, tex_mean, tex_pc, exp_mean, exp_pc,
-            shape_variance, tex_variance, exp_variance, image, i, full_num_coeff,
-            grid, interpolator, vertices_faces_map, faces));
+                                        full_num_coeff, full_num_coeff,
+                                        full_num_tex_coeff, 27, 4>(
+            new Constraint::PhotoConstraint(
+                shape_mean, shape_pc, tex_mean, tex_pc, exp_mean, exp_pc,
+                shape_variance, tex_variance, exp_variance, image, i,
+                full_num_coeff, grid, interpolator, vertices_faces_map, faces));
     full_problem.AddResidualBlock(
         cost_function_full, nullptr, &cam_extrinsics[0], &cam_intrinsics[0],
         &shape_coefficients[0], &exp_coefficients[0], &tex_coefficients[0],
@@ -595,30 +602,31 @@ void BFMModel::fit_image(std::string LandmarkPath, std::string ImagePath) {
   ceres::CostFunction *shape_prior_full =
       new ceres::AutoDiffCostFunction<Constraint::RegularizationConstraint,
                                       full_num_coeff, full_num_coeff>(
-          new Constraint::RegularizationConstraint(full_num_coeff, shape_variance, 1));
+          new Constraint::RegularizationConstraint(full_num_coeff,
+                                                   shape_variance, 1));
 
   ceres::CostFunction *tex_prior_full =
       new ceres::AutoDiffCostFunction<Constraint::RegularizationConstraint,
                                       full_num_tex_coeff, full_num_tex_coeff>(
-          new Constraint::RegularizationConstraint(full_num_tex_coeff, tex_variance, 1));
+          new Constraint::RegularizationConstraint(full_num_tex_coeff,
+                                                   tex_variance, 1));
 
   ceres::CostFunction *exp_prior_full =
       new ceres::AutoDiffCostFunction<Constraint::RegularizationConstraint,
                                       full_num_coeff, full_num_coeff>(
-          new Constraint::RegularizationConstraint(full_num_coeff, exp_variance, 1));
+          new Constraint::RegularizationConstraint(full_num_coeff, exp_variance,
+                                                   1));
 
-  ceres::CostFunction *dist_prior_full =
-      new ceres::AutoDiffCostFunction<Constraint::DistortionRegularizationConstraint,
-                                      4, 4>(new Constraint::DistortionRegularizationConstraint(1.0));
+  ceres::CostFunction *dist_prior_full = new ceres::AutoDiffCostFunction<
+      Constraint::DistortionRegularizationConstraint, 4, 4>(
+      new Constraint::DistortionRegularizationConstraint(1.0));
 
-  
-
-  
   full_problem.AddResidualBlock(tex_prior_full, nullptr, &tex_coefficients[0]);
-  full_problem.AddResidualBlock(shape_prior_full, nullptr, &shape_coefficients[0]);
+  full_problem.AddResidualBlock(shape_prior_full, nullptr,
+                                &shape_coefficients[0]);
   full_problem.AddResidualBlock(exp_prior_full, nullptr, &exp_coefficients[0]);
-  full_problem.AddResidualBlock(dist_prior_full, nullptr, &distortion_coefficients[0]);
-  
+  full_problem.AddResidualBlock(dist_prior_full, nullptr,
+                                &distortion_coefficients[0]);
 
   full_problem.SetParameterBlockConstant(&exp_coefficients[0]);
   ceres::Solve(options, &full_problem, &summary);
@@ -635,11 +643,12 @@ void BFMModel::fit_image(std::string LandmarkPath, std::string ImagePath) {
   for (unsigned int i = 0; i < num_vertices; ++i) {
     ceres::CostFunction *cost_function_full =
         new ceres::AutoDiffCostFunction<Constraint::PhotoConstraint, 3, 6, 2,
-                                        full_num_coeff, full_num_coeff, full_num_tex_coeff, 27,
-                                        4>(new Constraint::PhotoConstraint(
-            shape_mean, shape_pc, tex_mean, tex_pc, exp_mean, exp_pc,
-            shape_variance, tex_variance, exp_variance, image, i, full_num_coeff,
-            grid, interpolator, vertices_faces_map, faces));
+                                        full_num_coeff, full_num_coeff,
+                                        full_num_tex_coeff, 27, 4>(
+            new Constraint::PhotoConstraint(
+                shape_mean, shape_pc, tex_mean, tex_pc, exp_mean, exp_pc,
+                shape_variance, tex_variance, exp_variance, image, i,
+                full_num_coeff, grid, interpolator, vertices_faces_map, faces));
     last_problem.AddResidualBlock(
         cost_function_full, nullptr, &cam_extrinsics[0], &cam_intrinsics[0],
         &shape_coefficients[0], &exp_coefficients[0], &tex_coefficients[0],
@@ -650,25 +659,25 @@ void BFMModel::fit_image(std::string LandmarkPath, std::string ImagePath) {
   ceres::CostFunction *shape_prior_last =
       new ceres::AutoDiffCostFunction<Constraint::RegularizationConstraint,
                                       full_num_coeff, full_num_coeff>(
-          new Constraint::RegularizationConstraint(full_num_coeff, shape_variance, 1.0));
+          new Constraint::RegularizationConstraint(full_num_coeff,
+                                                   shape_variance, 1.0));
 
   ceres::CostFunction *tex_prior_last =
       new ceres::AutoDiffCostFunction<Constraint::RegularizationConstraint,
                                       full_num_tex_coeff, full_num_tex_coeff>(
-          new Constraint::RegularizationConstraint(full_num_tex_coeff, tex_variance, 1.0));
+          new Constraint::RegularizationConstraint(full_num_tex_coeff,
+                                                   tex_variance, 1.0));
 
   ceres::CostFunction *exp_prior_last =
       new ceres::AutoDiffCostFunction<Constraint::RegularizationConstraint,
                                       full_num_coeff, full_num_coeff>(
-          new Constraint::RegularizationConstraint(full_num_coeff, exp_variance, 1.0));
+          new Constraint::RegularizationConstraint(full_num_coeff, exp_variance,
+                                                   1.0));
 
-  
-
-  
   last_problem.AddResidualBlock(tex_prior_last, nullptr, &tex_coefficients[0]);
-  last_problem.AddResidualBlock(shape_prior_last, nullptr, &shape_coefficients[0]);
+  last_problem.AddResidualBlock(shape_prior_last, nullptr,
+                                &shape_coefficients[0]);
   last_problem.AddResidualBlock(exp_prior_last, nullptr, &exp_coefficients[0]);
-  
 
   last_problem.SetParameterBlockConstant(&exp_coefficients[0]);
   last_problem.SetParameterBlockConstant(&cam_extrinsics[0]);

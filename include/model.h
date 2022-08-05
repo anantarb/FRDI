@@ -8,10 +8,10 @@
 #include <fstream>
 #include <iostream>
 #include <math.h>
+#include <random>
 #include <string>
 #include <utility>
 #include <vector>
-#include <random>
 
 namespace fs = std::filesystem;
 
